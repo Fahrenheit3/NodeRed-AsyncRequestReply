@@ -1,0 +1,331 @@
+[
+    {
+        "id": "f47d8cbf9d50c5b1",
+        "type": "subflow",
+        "name": "Subflow 13",
+        "info": "",
+        "category": "",
+        "in": [
+            {
+                "x": 60,
+                "y": 240,
+                "wires": [
+                    {
+                        "id": "ee38901f53632cbf"
+                    }
+                ]
+            }
+        ],
+        "out": [
+            {
+                "x": 1260,
+                "y": 240,
+                "wires": [
+                    {
+                        "id": "f580ceffb3d1282e",
+                        "port": 0
+                    },
+                    {
+                        "id": "866ba505d970d8eb",
+                        "port": 0
+                    }
+                ]
+            }
+        ],
+        "env": [
+            {
+                "name": "requestType",
+                "type": "str",
+                "value": "GET",
+                "ui": {
+                    "icon": "font-awesome/fa-search-plus",
+                    "type": "select",
+                    "opts": {
+                        "opts": [
+                            {
+                                "l": {
+                                    "en-US": "POST"
+                                },
+                                "v": "POST"
+                            },
+                            {
+                                "l": {
+                                    "en-US": "GET"
+                                },
+                                "v": "GET"
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "name": "URL",
+                "type": "str",
+                "value": ""
+            }
+        ],
+        "meta": {},
+        "color": "#DDAA99"
+    },
+    {
+        "id": "f580ceffb3d1282e",
+        "type": "http request",
+        "z": "f47d8cbf9d50c5b1",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 910,
+        "y": 120,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "866ba505d970d8eb",
+        "type": "http request",
+        "z": "f47d8cbf9d50c5b1",
+        "name": "",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 910,
+        "y": 360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "4be7495163fda84e",
+        "type": "function",
+        "z": "f47d8cbf9d50c5b1",
+        "name": "",
+        "func": "let msg1;\nlet msg2;\n\n\nif(msg.requestType === \"GET\"){\n    msg1 = msg;\n} else if(msg.requestType === \"POST\") {\n    msg2 = msg;\n}\n\nreturn [msg1, msg2];",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 440,
+        "y": 240,
+        "wires": [
+            [
+                "db0448ccc8d5d98d"
+            ],
+            [
+                "f2a80531f8a601b7"
+            ]
+        ]
+    },
+    {
+        "id": "ee38901f53632cbf",
+        "type": "change",
+        "z": "f47d8cbf9d50c5b1",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "requestType",
+                "pt": "msg",
+                "to": "requestType",
+                "tot": "env"
+            },
+            {
+                "t": "set",
+                "p": "firstUrl",
+                "pt": "msg",
+                "to": "URL",
+                "tot": "env"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 220,
+        "y": 240,
+        "wires": [
+            [
+                "4be7495163fda84e"
+            ]
+        ]
+    },
+    {
+        "id": "f2a80531f8a601b7",
+        "type": "function",
+        "z": "f47d8cbf9d50c5b1",
+        "name": "",
+        "func": "\nif(msg.firstUrl){\n    msg.url = msg.firstUrl;\n}\n\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 660,
+        "y": 360,
+        "wires": [
+            [
+                "866ba505d970d8eb"
+            ]
+        ]
+    },
+    {
+        "id": "db0448ccc8d5d98d",
+        "type": "function",
+        "z": "f47d8cbf9d50c5b1",
+        "name": "",
+        "func": "\nif(msg.firstUrl){\n    msg.url = msg.firstUrl;\n}\n\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 660,
+        "y": 120,
+        "wires": [
+            [
+                "f580ceffb3d1282e"
+            ]
+        ]
+    },
+    {
+        "id": "3195468c5b69ce8e",
+        "type": "subflow:f47d8cbf9d50c5b1",
+        "z": "bcaf575c2a11e950",
+        "name": "Request-Reply",
+        "x": 640,
+        "y": 3020,
+        "wires": [
+            [
+                "60e0a8d81626120e"
+            ]
+        ]
+    },
+    {
+        "id": "d20bfd4e1928b5ba",
+        "type": "inject",
+        "z": "bcaf575c2a11e950",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "url",
+                "v": "https://jsonplaceholder.typicode.com/posts",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 260,
+        "y": 3020,
+        "wires": [
+            [
+                "3195468c5b69ce8e"
+            ]
+        ]
+    },
+    {
+        "id": "60e0a8d81626120e",
+        "type": "debug",
+        "z": "bcaf575c2a11e950",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1070,
+        "y": 3020,
+        "wires": []
+    },
+    {
+        "id": "be73cc0efd7ae798",
+        "type": "subflow:f47d8cbf9d50c5b1",
+        "z": "bcaf575c2a11e950",
+        "name": "Request-Reply",
+        "env": [
+            {
+                "name": "requestType",
+                "value": "POST",
+                "type": "str"
+            }
+        ],
+        "x": 640,
+        "y": 3160,
+        "wires": [
+            [
+                "6180cd92bb77690c"
+            ]
+        ]
+    },
+    {
+        "id": "b927db0c4419e05e",
+        "type": "inject",
+        "z": "bcaf575c2a11e950",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "url",
+                "v": "https://jsonplaceholder.typicode.com/posts",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"title\": \"whatever\", \"body\": \"whatever2\", \"userId\": 1}",
+        "payloadType": "str",
+        "x": 250,
+        "y": 3160,
+        "wires": [
+            [
+                "be73cc0efd7ae798"
+            ]
+        ]
+    },
+    {
+        "id": "6180cd92bb77690c",
+        "type": "debug",
+        "z": "bcaf575c2a11e950",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1070,
+        "y": 3160,
+        "wires": []
+    }
+]
