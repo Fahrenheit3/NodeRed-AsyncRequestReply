@@ -2,6 +2,6 @@
 One of my Node-Red subflows for Google Summer of Code. (Asynchronous Request-Reply pattern implemented...)
 
 DESCRIPTION:
-  This subflow checks the technical fail percentage of a flow. At its optimum use the flow has a function which counts every fail and success. The subflow takes these numbers every 15 seconds and calculates if the fail percentage threshold is exceeded. If yes the flow is stopped for some time(which is chosen by user) to cooldown. After that time ends the subflow gives the flow a go and then the cycle begins again.
+  This subflow is used to send requests to certain URLs. There are two request types which are used in this flow. The POST and the GET requests. The responses come in msg.payload as a JSON string which then turned into an object.
   
 (FOR A DETAILED DESCRIPTION PLEASE VISIT MY NODE-RED PAGE)
