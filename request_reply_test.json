@@ -1,152 +1,169 @@
 [
     {
-        "id": "f47d8cbf9d50c5b1",
+        "id": "684766f6b176af89",
         "type": "subflow",
-        "name": "Subflow 13",
+        "name": "Subflow 7",
         "info": "",
         "category": "",
-        "in": [
-            {
-                "x": 60,
-                "y": 240,
-                "wires": [
-                    {
-                        "id": "ee38901f53632cbf"
-                    }
-                ]
-            }
-        ],
+        "in": [],
         "out": [
             {
-                "x": 1260,
-                "y": 240,
+                "x": 1020,
+                "y": 80,
                 "wires": [
                     {
-                        "id": "f580ceffb3d1282e",
+                        "id": "68511cac815a3cd3",
                         "port": 0
-                    },
+                    }
+                ]
+            },
+            {
+                "x": 1070,
+                "y": 200,
+                "wires": [
                     {
-                        "id": "866ba505d970d8eb",
-                        "port": 0
+                        "id": "373fac3af2b6fa87",
+                        "port": 1
                     }
                 ]
             }
         ],
         "env": [
             {
-                "name": "requestType",
-                "type": "str",
-                "value": "GET",
-                "ui": {
-                    "icon": "font-awesome/fa-search-plus",
-                    "type": "select",
-                    "opts": {
-                        "opts": [
-                            {
-                                "l": {
-                                    "en-US": "POST"
-                                },
-                                "v": "POST"
-                            },
-                            {
-                                "l": {
-                                    "en-US": "GET"
-                                },
-                                "v": "GET"
-                            }
-                        ]
-                    }
-                }
+                "name": "cooldownTime",
+                "type": "num",
+                "value": "20"
             },
             {
-                "name": "URL",
-                "type": "str",
-                "value": ""
+                "name": "failThreshold",
+                "type": "num",
+                "value": "15"
             }
         ],
         "meta": {},
-        "color": "#DDAA99"
+        "color": "#3FADB5",
+        "outputLabels": [
+            "Flow Controller",
+            "Status Check"
+        ],
+        "icon": "node-red-contrib-queue-gate/queue.png"
     },
     {
-        "id": "f580ceffb3d1282e",
-        "type": "http request",
-        "z": "f47d8cbf9d50c5b1",
-        "name": "",
-        "method": "GET",
-        "ret": "obj",
-        "paytoqs": "ignore",
-        "url": "",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "authType": "",
-        "senderr": false,
-        "x": 910,
-        "y": 120,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "866ba505d970d8eb",
-        "type": "http request",
-        "z": "f47d8cbf9d50c5b1",
-        "name": "",
-        "method": "POST",
-        "ret": "obj",
-        "paytoqs": "ignore",
-        "url": "",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "authType": "",
-        "senderr": false,
-        "x": 910,
-        "y": 360,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "4be7495163fda84e",
+        "id": "373fac3af2b6fa87",
         "type": "function",
-        "z": "f47d8cbf9d50c5b1",
-        "name": "",
-        "func": "let msg1;\nlet msg2;\n\n\nif(msg.requestType === \"GET\"){\n    msg1 = msg;\n} else if(msg.requestType === \"POST\") {\n    msg2 = msg;\n}\n\nreturn [msg1, msg2];",
+        "z": "684766f6b176af89",
+        "name": "calculate stats through flow variables",
+        "func": "\nmsg.failPercentage = flow.get(\"failCounter\") * 100 / (flow.get(\"failCounter\") + flow.get(\"successCounter\"));\nflow.set(\"successCounter\", 0);\nflow.set(\"failCounter\", 0);\nlet msg1;\nlet msg2;\n\nif(flow.get(\"failThreshold\") <= msg.failPercentage){\n    msg.topic = \"control\";\n    msg.payload = \"close\";\n    msg[\"timeout\"] = flow.get(\"cooldownTime\");\n    msg1 = msg;\n} else {\n    msg.topic = \"control\";\n    msg.payload = flow.get(\"failCounter\");\n    msg2 = msg;\n}\n\n\nreturn [msg1, msg2];",
         "outputs": 2,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 440,
-        "y": 240,
+        "x": 650,
+        "y": 200,
         "wires": [
             [
-                "db0448ccc8d5d98d"
+                "0366e4dba1bbc8b2"
             ],
+            []
+        ]
+    },
+    {
+        "id": "29327a84206f99a7",
+        "type": "inject",
+        "z": "684766f6b176af89",
+        "name": "PERIODIC CHECK",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "failPercentage",
+                "v": "",
+                "vt": "num"
+            }
+        ],
+        "repeat": "15",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 140,
+        "y": 300,
+        "wires": [
             [
-                "f2a80531f8a601b7"
+                "56b259b5dbb88083"
             ]
         ]
     },
     {
-        "id": "ee38901f53632cbf",
+        "id": "68511cac815a3cd3",
+        "type": "function",
+        "z": "684766f6b176af89",
+        "name": "control gate",
+        "func": "\n\n//if threshold is reached and timer is not set, close gate\n\n\n//if timer >limit open gate\n\nif(msg.payload === 1){\n    msg.payload = \"open\";\n}\n\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 810,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "0366e4dba1bbc8b2",
+        "type": "mytimeout",
+        "z": "684766f6b176af89",
+        "name": "",
+        "outtopic": "",
+        "outsafe": "",
+        "outwarning": "Warning",
+        "outunsafe": "off",
+        "warning": "5",
+        "timer": "30",
+        "debug": false,
+        "ndebug": false,
+        "ignoreCase": false,
+        "repeat": false,
+        "again": false,
+        "x": 450,
+        "y": 80,
+        "wires": [
+            [
+                "68511cac815a3cd3"
+            ],
+            [
+                "68511cac815a3cd3"
+            ]
+        ]
+    },
+    {
+        "id": "56b259b5dbb88083",
         "type": "change",
-        "z": "f47d8cbf9d50c5b1",
+        "z": "684766f6b176af89",
         "name": "",
         "rules": [
             {
                 "t": "set",
-                "p": "requestType",
-                "pt": "msg",
-                "to": "requestType",
+                "p": "cooldownTime",
+                "pt": "flow",
+                "to": "cooldownTime",
                 "tot": "env"
             },
             {
                 "t": "set",
-                "p": "firstUrl",
-                "pt": "msg",
-                "to": "URL",
+                "p": "failThreshold",
+                "pt": "flow",
+                "to": "failThreshold",
                 "tot": "env"
             }
         ],
@@ -155,177 +172,159 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 220,
+        "x": 360,
         "y": 240,
         "wires": [
             [
-                "4be7495163fda84e"
+                "373fac3af2b6fa87"
             ]
         ]
     },
     {
-        "id": "f2a80531f8a601b7",
-        "type": "function",
-        "z": "f47d8cbf9d50c5b1",
+        "id": "cd48aa9385503fc7",
+        "type": "http request",
+        "z": "d0ac6a57ffe6a2b7",
         "name": "",
-        "func": "\nif(msg.firstUrl){\n    msg.url = msg.firstUrl;\n}\n\n\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 660,
-        "y": 360,
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "body",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 1090,
+        "y": 1060,
         "wires": [
             [
-                "866ba505d970d8eb"
+                "5b2457fbc49888e0"
             ]
         ]
     },
     {
-        "id": "db0448ccc8d5d98d",
-        "type": "function",
-        "z": "f47d8cbf9d50c5b1",
-        "name": "",
-        "func": "\nif(msg.firstUrl){\n    msg.url = msg.firstUrl;\n}\n\n\nreturn msg;",
-        "outputs": 1,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 660,
-        "y": 120,
-        "wires": [
-            [
-                "f580ceffb3d1282e"
-            ]
-        ]
-    },
-    {
-        "id": "3195468c5b69ce8e",
-        "type": "subflow:f47d8cbf9d50c5b1",
-        "z": "bcaf575c2a11e950",
-        "name": "Request-Reply",
-        "x": 640,
-        "y": 3020,
-        "wires": [
-            [
-                "60e0a8d81626120e"
-            ]
-        ]
-    },
-    {
-        "id": "d20bfd4e1928b5ba",
+        "id": "7e9ed23f047ea5ac",
         "type": "inject",
-        "z": "bcaf575c2a11e950",
-        "name": "",
+        "z": "d0ac6a57ffe6a2b7",
+        "name": "cars on craigslist",
         "props": [
             {
                 "p": "payload"
             },
             {
-                "p": "url",
-                "v": "https://jsonplaceholder.typicode.com/posts",
+                "p": "topic",
                 "vt": "str"
             }
         ],
-        "repeat": "",
+        "repeat": "5",
         "crontab": "",
         "once": false,
-        "onceDelay": 0.1,
+        "onceDelay": "",
         "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 260,
-        "y": 3020,
+        "payload": "http://vancouver.craigslist.org/search/sss?format=rss&query=cars",
+        "payloadType": "str",
+        "x": 370,
+        "y": 1060,
         "wires": [
             [
-                "3195468c5b69ce8e"
+                "0d50e4c7a49c2f34"
             ]
         ]
     },
     {
-        "id": "60e0a8d81626120e",
-        "type": "debug",
-        "z": "bcaf575c2a11e950",
+        "id": "0d50e4c7a49c2f34",
+        "type": "change",
+        "z": "d0ac6a57ffe6a2b7",
         "name": "",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1070,
-        "y": 3020,
-        "wires": []
+        "rules": [
+            {
+                "t": "set",
+                "p": "url",
+                "pt": "msg",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 590,
+        "y": 1060,
+        "wires": [
+            [
+                "23c0abdaf4aeeac2"
+            ]
+        ]
     },
     {
-        "id": "be73cc0efd7ae798",
-        "type": "subflow:f47d8cbf9d50c5b1",
-        "z": "bcaf575c2a11e950",
-        "name": "Request-Reply",
+        "id": "5b2457fbc49888e0",
+        "type": "function",
+        "z": "d0ac6a57ffe6a2b7",
+        "name": "counter of failures",
+        "func": "\nif(msg.statusCode === 403){\n    if(flow.get(\"failCounter\")){\n        flow.set(\"failCounter\", flow.get(\"failCounter\") + 1)\n    } else {\n        flow.set(\"failCounter\", 1);\n    }\n} else {\n    if(flow.get(\"successCounter\")){\n        flow.set(\"successCounter\", flow.get(\"successCounter\") + 1);\n    } else {\n        flow.set(\"successCounter\", 1);\n    }\n}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1330,
+        "y": 1060,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d765827ece6f2813",
+        "type": "subflow:684766f6b176af89",
+        "z": "d0ac6a57ffe6a2b7",
+        "name": "",
         "env": [
             {
-                "name": "requestType",
-                "value": "POST",
-                "type": "str"
+                "name": "cooldownTime",
+                "value": "10",
+                "type": "num"
             }
         ],
-        "x": 640,
-        "y": 3160,
+        "x": 500,
+        "y": 1240,
         "wires": [
             [
-                "6180cd92bb77690c"
-            ]
+                "23c0abdaf4aeeac2"
+            ],
+            []
         ]
     },
     {
-        "id": "b927db0c4419e05e",
-        "type": "inject",
-        "z": "bcaf575c2a11e950",
+        "id": "23c0abdaf4aeeac2",
+        "type": "q-gate",
+        "z": "d0ac6a57ffe6a2b7",
         "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "url",
-                "v": "https://jsonplaceholder.typicode.com/posts",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "{\"title\": \"whatever\", \"body\": \"whatever2\", \"userId\": 1}",
-        "payloadType": "str",
-        "x": 250,
-        "y": 3160,
+        "controlTopic": "control",
+        "defaultState": "open",
+        "openCmd": "open",
+        "closeCmd": "close",
+        "toggleCmd": "toggle",
+        "queueCmd": "queue",
+        "defaultCmd": "default",
+        "triggerCmd": "trigger",
+        "flushCmd": "flush",
+        "resetCmd": "reset",
+        "peekCmd": "peek",
+        "dropCmd": "drop",
+        "statusCmd": "status",
+        "maxQueueLength": "100",
+        "keepNewest": false,
+        "qToggle": false,
+        "persist": false,
+        "storeName": "memory",
+        "x": 850,
+        "y": 1060,
         "wires": [
             [
-                "be73cc0efd7ae798"
+                "cd48aa9385503fc7"
             ]
         ]
-    },
-    {
-        "id": "6180cd92bb77690c",
-        "type": "debug",
-        "z": "bcaf575c2a11e950",
-        "name": "",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1070,
-        "y": 3160,
-        "wires": []
     }
 ]
